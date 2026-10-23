@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>داشبورد قیمت و پیش‌بینی طلای ۱۸ عیار ایران</title>
+<link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">
+<style>
+:root{--bg:#0f172a;--surface:#1e293b;--surface2:#334155;--text:#f1f5f9;--text2:#94a3b8;--border:#475569;--green:#22c55e;--blue:#3b82f6;--red:#ef4444;--gold:#fbbf24;--radius:12px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Vazirmatn',Tahoma,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.7}
+.container{max-width:1400px;margin:0 auto;padding:16px}
+header{background:linear-gradient(135deg,#1e293b,#0f172a);border-bottom:1px solid var(--border);padding:24px 0;margin-bottom:24px}
+header h1{font-size:1.5rem;font-weight:700;color:var(--gold)}
+.subtitle{color:var(--text2);font-size:.9rem;margin-top:4px}
+.badge-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;align-items:center}
+.badge{display:inline-flex;align-items:center;gap:6px;background:var(--surface2);padding:4px 12px;border-radius:999px;font-size:.8rem;color:var(--text2)}
+.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dot.live{background:var(--green)}.dot.stale{background:var(--gold)}.dot.error{background:var(--red)}
+#refreshBtn{background:var(--gold);color:#0f172a;border:none;padding:9px 20px;border-radius:8px;font-family:inherit;font-weight:700;cursor:pointer;font-size:.9rem;display:inline-flex;align-items:center;gap:6px}
+#refreshBtn:disabled{opacity:.55;cursor:wait}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:24px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
+.card .label{font-size:.8rem;color:var(--text2);margin-bottom:4px}
+.card .value{font-size:1.25rem;font-weight:700}
+.card .value.gold{color:var(--gold)}
+.card .meta{font-size:.7rem;color:var(--text2);margin-top:6px;line-height:1.5}
+.section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:24px}
+.section h2{font-size:1.1rem;margin-bottom:16px;color:var(--gold)}
+.section h3{font-size:.95rem;margin:16px 0 8px}
+table{width:100%;border-collapse:collapse;font-size:.82rem}
+th,td{padding:10px 6px;text-align:center;border-bottom:1px solid var(--border);white-space:nowrap}
+th{background:var(--surface2);color:var(--text2);font-weight:600;position:sticky;top:0;z-index:10}
+tbody tr:hover{background:rgba(255,255,255,.03)}
+.good{color:var(--green)}.base{color:var(--blue)}.bad{color:var(--red)}
+.row-hl{background:rgba(251,191,36,.12)!important}
+.col-hl{background:rgba(251,191,36,.08)!important}
+.table-wrapper{overflow:auto;max-height:500px;border-radius:8px;border:1px solid var(--border)}
+.table-wrapper table{min-width:800px}
+.controls{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;align-items:center}
+.controls input,.controls select{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:8px;font-family:inherit;font-size:.85rem}
+.controls button{background:var(--gold);color:#0f172a;border:none;padding:8px 16px;border-radius:8px;font-family:inherit;font-weight:600;cursor:pointer;font-size:.85rem}
+.controls button.sec{background:var(--surface2);color:var(--text)}
+.warning{background:rgba(239,68,68,.15);border:1px solid var(--red);border-radius:8px;padding:12px;font-size:.8rem;margin:12px 0}
+.info{background:rgba(59,130,246,.15);border:1px solid var(--blue);border-radius:8px;padding:12px;font-size:.8rem;margin:12px 0}
+.assumption-box{background:var(--surface2);border-radius:8px;padding:12px;font-size:.8rem;color:var(--text2);margin-top:12px}
+.chart-container{position:relative;height:280px;margin:12px 0}
+canvas{width:100%!important;height:100%!important}
+.footer{text-align:center;color:var(--text2);font-size:.75rem;padding:24px 0}
+.source-table td{font-size:.78rem}
+@media(max-width:768px){.cards{grid-template-columns:repeat(2,1fr)}.section{padding:12px}header h1{font-size:1.15rem}table{font-size:.72rem}th,td{padding:6px 3px}}
+@media print{body{background:#fff;color:#000}.section{border:1px solid #ccc;break-inside:avoid}.controls,.badge-row,#refreshBtn{display:none}}
+</style>
+</head>
+<body>
+<header>
+  <div class="container">
+    <h1>📊 داشبورد قیمت و پیش‌بینی طلای ۱۸ عیار ایران</h1>
+    <p class="subtitle">کشف قیمت چندمنبعی (فقط با کلیک دستی) + سه سناریو (۷ / ۳۰ / ۹۰ روز)</p>
+    <div class="badge-row">
+      <button id="refreshBtn" onclick="refreshAll()">🔄 به‌روزرسانی قیمت‌ها</button>
+      <span class="badge"><span class="dot stale" id="statusDot"></span><span id="statusText">آماده — داده ثبت‌شده</span></span>
+      <span class="badge">آخرین تلاش: <span id="lastTry">—</span></span>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+  <div id="dataWarning" class="warning" style="display:none"></div>
+
+  <div class="cards">
+    <div class="card"><div class="label">انس جهانی (XAU/USD)</div><div class="value gold" id="cOunce">—</div><div class="meta" id="mOunce">—</div></div>
+    <div class="card"><div class="label">دلار آزاد تهران</div><div class="value" id="cDollar">—</div><div class="meta" id="mDollar">—</div></div>
+    <div class="card"><div class="label">طلای ۱۸ عیار (گرم)</div><div class="value gold" id="cGold">—</div><div class="meta" id="mGold">—</div></div>
+    <div class="card"><div class="label">برآورد ۷ روز (واقع‌بینانه)</div><div class="value" id="cF7">—</div><div class="meta" id="mF7">—</div></div>
+    <div class="card"><div class="label">برآورد ۳۰ روز (واقع‌بینانه)</div><div class="value" id="cF30">—</div><div class="meta" id="mF30">—</div></div>
+    <div class="card"><div class="label">برآورد ۹۰ روز (واقع‌بینانه)</div><div class="value" id="cF90">—</div><div class="meta" id="mF90">—</div></div>
+  </div>
+
+  <div class="section">
+    <h2>🎯 جدول پیش‌بینی سه سناریو</h2>
+    <div class="table-wrapper" style="max-height:none">
+      <table><thead><tr><th>افق</th><th>سناریو</th><th>انس (دلار)</th><th>دلار (تومان)</th><th>طلای ۱۸ (تومان/گرم)</th><th>تغییر (تومان)</th><th>تغییر (%)</th></tr></thead><tbody id="forecastBody"></tbody></table>
+    </div>
+    <div class="assumption-box" id="assumptionsBox"></div>
+  </div>
+
+  <div class="section">
+    <h2>📈 جدول حساسیت (انس ۳۵۰۰–۴۵۰۰ × دلار ۲۴۰–۳۲۰ هزار)</h2>
+    <div class="controls">
+      <input type="text" id="searchInput" placeholder="جستجوی عدد..." style="width:130px">
+      <select id="ounceFilter"><option value="">همه انس‌ها</option><option value="3500-3800">۳۵۰۰–۳۸۰۰</option><option value="3800-4100">۳۸۰۰–۴۱۰۰</option><option value="4100-4500">۴۱۰۰–۴۵۰۰</option></select>
+      <button onclick="exportCSV()">📥 CSV</button>
+      <button class="sec" onclick="window.print()">🖨️ چاپ/PDF</button>
+    </div>
+    <div class="table-wrapper"><table><thead id="sensThead"></thead><tbody id="sensBody"></tbody></table></div>
+  </div>
+
+  <div class="section">
+    <h2>📉 نمودارها</h2>
+    <h3>۱. مسیر پیش‌بینی‌شده طلای ۱۸ عیار</h3>
+    <div class="chart-container"><canvas id="chartForecast"></canvas></div>
+    <div class="info">فقط نقاط هدف رسم شده‌اند؛ مسیر روزانه ساختگی ایجاد نشده است.</div>
+    <h3>۲. تأثیر تغییر انس (دلار ثابت)</h3>
+    <div class="chart-container"><canvas id="chartOunce"></canvas></div>
+    <h3>۳. تأثیر تغییر دلار (انس ثابت)</h3>
+    <div class="chart-container"><canvas id="chartDollar"></canvas></div>
+  </div>
+
+  <div class="section">
+    <h2>📐 روش محاسبه و منابع</h2>
+    <p style="font-size:.85rem;margin-bottom:8px"><strong>فرمول ارزش ذاتی:</strong></p>
+    <code style="background:var(--surface2);padding:8px 12px;border-radius:6px;display:block;font-size:.8rem;direction:ltr;text-align:left">قیمت ذاتی = انس × دلار × 0.75 ÷ 31.1034768</code>
+    <p style="font-size:.85rem;margin:8px 0"><strong>ضریب تعدیل بازار:</strong> <span id="adjFactor">—</span></p>
+    <p style="font-size:.85rem"><strong>قیمت نهایی تخمینی:</strong> ارزش ذاتی سناریو × ضریب تعدیل</p>
+    <h3>منابع کشف قیمت</h3>
+    <table class="source-table" style="font-size:.8rem">
+      <thead><tr><th>منبع</th><th>نوع</th><th>وضعیت</th></tr></thead>
+      <tbody>
+        <tr><td>TGJU.org</td><td>انس، دلار، طلای ۱۸ عیار</td><td>از طریق زنجیره پراکسی رایگان</td></tr>
+        <tr><td>corsproxy.io</td><td>پراکسی CORS</td><td>اولین انتخاب</td></tr>
+        <tr><td>allorigins.win</td><td>پراکسی CORS</td><td>دومین انتخاب</td></tr>
+        <tr><td>thingproxy</td><td>پراکسی CORS</td><td>سومین انتخاب</td></tr>
+      </tbody>
+    </table>
+    <div class="warning" style="margin-top:12px"><strong>محدودیت‌ها:</strong> پراکسی‌های رایگان ناپایدارند و ممکن است ساختار JSON سایت هدف تغییر کند. ضریب تعدیل ثابت فرض شده؛ داده‌ها ممکن است هم‌زمان نباشند؛ پیش‌بینی‌ها قطعی نیستند و توصیه معاملاتی محسوب نمی‌شوند. قیمت طلای ۱۸ عیار خام است و اجرت ساخت/مالیات/سود فروشنده را شامل نمی‌شود.</div>
+  </div>
+  <div class="footer">داده‌ها از منابع عمومی | این داشبورد توصیه خرید یا فروش ارائه نمی‌دهد</div>
+</main>
+
+<script>
+// ===== داده پایه (ثبت‌شده – جایگزین در صورت شکست همه پراکسی‌ها) =====
+const FALLBACK = {
+  ounce: 4019, ounceDate: '۲۳ اکتبر ۲۰۲۶', ounceSource: 'Qatar News Agency',
+  dollar: 274000, dollarDate: '۲۱–۲۲ اکتبر ۲۰۲۶', dollarSource: 'Euronews فارسی',
+  gold18: 27023500, goldDate: '۲۲ اکتبر ۲۰۲۶', goldSource: 'ایران جیب',
+};
+FALLBACK.adj = FALLBACK.gold18 / (FALLBACK.ounce * FALLBACK.dollar * 0.75 / 31.1034768);
+
+// ===== محاسبات =====
+const intrinsic = (o, d) => o * d * 0.75 / 31.1034768;
+const marketPrice = (o, d, adj) => intrinsic(o, d) * adj;
+const fmtT = n => Math.round(n).toLocaleString('fa-IR');
+const fmtP = n => (n >= 0 ? '+' : '') + n.toFixed(1) + '٪';
+
+function buildForecasts(adj, currentGold) {
+  const raw = [
+    {h:'۷ روز',s:'خوش‌بینانه',o:4150,d:280000,cls:'good'},
+    {h:'۷ روز',s:'واقع‌بینانه',o:4020,d:275000,cls:'base'},
+    {h:'۷ روز',s:'بدبینانه',o:3900,d:265000,cls:'bad'},
+    {h:'۳۰ روز',s:'خوش‌بینانه',o:4300,d:295000,cls:'good'},
+    {h:'۳۰ روز',s:'واقع‌بینانه',o:4100,d:285000,cls:'base'},
+    {h:'۳۰ روز',s:'بدبینانه',o:3800,d:260000,cls:'bad'},
+    {h:'۹۰ روز',s:'خوش‌بینانه',o:4500,d:320000,cls:'good'},
+    {h:'۹۰ روز',s:'واقع‌بینانه',o:4200,d:290000,cls:'base'},
+    {h:'۹۰ روز',s:'بدبینانه',o:3750,d:250000,cls:'bad'},
+  ];
+  return raw.map(x => {
+    const price = marketPrice(x.o, x.d, adj);
+    return {...x, price, diff: price - currentGold, pct: (price - currentGold) / currentGold * 100};
+  });
+}
+
+// ===== زنجیره پراکسی‌های رایگان (فقط با کلیک دستی فعال می‌شوند) =====
+const CORS_PROXIES = [
+  { name: 'corsproxy.io', build: u => `https://corsproxy.io/?${encodeURIComponent(u)}` },
+  { name: 'allorigins',   build: u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}` },
+  { name: 'thingproxy',   build: u => `https://thingproxy.freeboard.io/fetch/${u}` },
+  { name: 'cors.eu.org',  build: u => `https://cors.eu.org/${u}` },
+];
+
+const TARGET_URL = 'https://api.tgju.org/v1/market/indicator/summary';
+
+async function fetchViaProxies(targetUrl, timeoutMs = 12000) {
+  for (const proxy of CORS_PROXIES) {
+    try {
+      const proxied = proxy.build(targetUrl);
+      console.log('تلاش:', proxy.name, proxied);
+      const res = await fetch(proxied, {
+        signal: AbortSignal.timeout(timeoutMs),
+        headers: { 'Accept': 'application/json' },
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const text = await res.text();
+      let json;
+      try { json = JSON.parse(text); }
+      catch { throw new Error('پاسخ JSON نامعتبر'); }
+      console.log('✅ موفق از', proxy.name);
+      return { json, source: proxy.name };
+    } catch (e) {
+      console.warn(`❌ ${proxy.name} شکست: ${e.message}`);
+    }
+  }
+  return null;
+}
+
+function parseTgju(json) {
+  const out = { ounce: null, dollar: null, gold18: null };
+  if (!json) return out;
+  const arr = json.data || json.indicators || json;
+  const list = Array.isArray(arr) ? arr : Object.values(arr || {});
+  for (const item of list) {
+    if (!item || typeof item !== 'object') continue;
+    const key = (item.key || item.name || item.slug || '').toString().toLowerCase();
+    const price = parseFloat(String(item.price || item.value || item.close || '').replace(/,/g, ''));
+    if (!isFinite(price)) continue;
+    if (key.includes('ounce') || key.includes('ons')) out.ounce = price;
+    if (key === 'price_dollar_rl' || key.includes('dollar_free') || key.includes('دلار')) out.dollar = price;
+    if (key.includes('gold_18') || key.includes('geram18') || key.includes('18')) out.gold18 = price;
+  }
+  return out;
+}
+
+async function discoverPrices() {
+  const result = { ounce: null, dollar: null, gold18: null, live: false, sources: [] };
+
+  const fetched = await fetchViaProxies(TARGET_URL);
+  if (fetched) {
+    const p = parseTgju(fetched.json);
+    if (p.ounce) { result.ounce = p.ounce; result.sources.push('TGJU/انس'); }
+    if (p.dollar) { result.dollar = p.dollar; result.sources.push('TGJU/دلار'); }
+    if (p.gold18) { result.gold18 = p.gold18; result.sources.push('TGJU/طلا'); }
+    if (result.sources.length) result.sources.push('via ' + fetched.source);
+  }
+
+  if (!result.ounce) { result.ounce = FALLBACK.ounce; result.sources.push('ثبت‌شده'); }
+  if (!result.dollar) { result.dollar = FALLBACK.dollar; result.sources.push('ثبت‌شده'); }
+  if (!result.gold18) { result.gold18 = FALLBACK.gold18; result.sources.push('ثبت‌شده'); }
+
+  result.live = result.sources.some(s => s.startsWith('TGJU'));
+  result.adj = result.gold18 / intrinsic(result.ounce, result.dollar);
+  result.dates = result.live
+    ? 'دریافت‌شده در ' + new Date().toLocaleString('fa-IR')
+    : FALLBACK.ounceDate + ' / ' + FALLBACK.dollarDate;
+  return result;
+}
+
+// ===== رندر =====
+let currentData = null;
+
+function renderAll(data) {
+  currentData = data;
+  const adj = data.adj;
+
+  document.getElementById('statusDot').className = 'dot ' + (data.live ? 'live' : 'stale');
+  document.getElementById('statusText').textContent = data.live ? 'داده زنده/ترکیبی' : 'داده ثبت‌شده (غیرزنده)';
+  document.getElementById('lastTry').textContent = new Date().toLocaleString('fa-IR');
+  document.getElementById('adjFactor').textContent = adj.toFixed(4);
+
+  const warn = document.getElementById('dataWarning');
+  if (!data.live) {
+    warn.style.display = 'block';
+    warn.innerHTML = `⚠️ دریافت زنده ممکن نشد. داده‌های نمایش‌داده‌شده از منابع معتبر ثبت‌شده (${data.dates}) هستند و <strong>زنده نیستند</strong>. ممکن است پراکسی‌های رایگان در دسترس نباشند یا سایت TGJU ساختار پاسخ را تغییر داده باشد. برای جزئیات، Console مرورگر (F12) را ببینید.`;
+  } else {
+    warn.style.display = 'none';
+  }
+
+  document.getElementById('cOunce').textContent = '$' + data.ounce.toLocaleString('en-US', {maximumFractionDigits:2});
+  document.getElementById('mOunce').textContent = data.live ? (data.sources.join(' | ')) : FALLBACK.ounceSource;
+  document.getElementById('cDollar').textContent = fmtT(data.dollar) + ' تومان';
+  document.getElementById('mDollar').textContent = data.live ? 'ترکیبی' : FALLBACK.dollarSource;
+  document.getElementById('cGold').textContent = fmtT(data.gold18) + ' تومان';
+  document.getElementById('mGold').textContent = data.live ? 'ترکیبی' : FALLBACK.goldSource;
+
+  const fs = buildForecasts(adj, data.gold18);
+  const byH = h => fs.filter(x => x.h === h);
+  const base = arr => arr.find(x => x.s === 'واقع‌بینانه');
+  const good = arr => arr.find(x => x.s === 'خوش‌بینانه');
+  const bad = arr => arr.find(x => x.s === 'بدبینانه');
+
+  [['۷ روز','cF7','mF7'],['۳۰ روز','cF30','mF30'],['۹۰ روز','cF90','mF90']].forEach(([h,cid,mid]) => {
+    const arr = byH(h), b = base(arr);
+    document.getElementById(cid).textContent = fmtT(b.price);
+    document.getElementById(mid).textContent = `بازه: ${fmtT(bad(arr).price)} — ${fmtT(good(arr).price)}`;
+  });
+
+  const tb = document.getElementById('forecastBody');
+  tb.innerHTML = '';
+  fs.forEach(f => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${f.h}</td><td class="${f.cls}" style="font-weight:600">${f.s}</td><td>${f.o.toLocaleString('en-US')}</td><td>${fmtT(f.d)}</td><td style="font-weight:700">${fmtT(f.price)}</td><td class="${f.diff>=0?'good':'bad'}">${f.diff>=0?'+':''}${fmtT(f.diff)}</td><td class="${f.diff>=0?'good':'bad'}">${fmtP(f.pct)}</td>`;
+    tb.appendChild(tr);
+  });
+
+  document.getElementById('assumptionsBox').innerHTML = `<strong>فرضیات:</strong> ضریب تعدیل ${adj.toFixed(4)} (ثابت) | انس ${data.ounce.toLocaleString('en-US')} دلار | دلار ${fmtT(data.dollar)} تومان | طلا ${fmtT(data.gold18)} تومان. سناریوها بر اساس روند، حمایت/مقاومت و رویدادهای پیش‌رو (نشست فدرال رزرو) تنظیم شده‌اند.`;
+
+  renderSensitivity(data);
+  renderCharts(data, fs);
+}
+
+// ===== جدول حساسیت =====
+let sensRows = [];
+function renderSensitivity(data) {
+  const adj = data.adj;
+  const dollars = []; for (let d = 240000; d <= 320000; d += 5000) dollars.push(d);
+  const ounces = []; for (let o = 3500; o <= 4500; o += 25) ounces.push(o);
+
+  let th = '<tr><th>انس \\ دلار</th>';
+  dollars.forEach(d => th += `<th class="${Math.abs(d-data.dollar)<5000?'col-hl':''}">${(d/1000).toLocaleString('fa-IR')}ه</th>`);
+  th += '</tr>';
+  document.getElementById('sensThead').innerHTML = th;
+
+  const tb = document.getElementById('sensBody');
+  tb.innerHTML = ''; sensRows = [];
+  ounces.forEach(o => {
+    const tr = document.createElement('tr');
+    if (Math.abs(o - data.ounce) < 50) tr.classList.add('row-hl');
+    let html = `<td style="font-weight:600">${o.toLocaleString('en-US')}</td>`;
+    dollars.forEach(d => {
+      const p = marketPrice(o, d, adj);
+      sensRows.push({ounce:o, dollar:d, price:p});
+      html += `<td class="${Math.abs(d-data.dollar)<5000?'col-hl':''}">${fmtT(p)}</td>`;
+    });
+    tr.innerHTML = html;
+    tb.appendChild(tr);
+  });
+}
+
+function exportCSV() {
+  let csv = '\uFEFF' + 'انس (دلار),دلار (تومان),طلای ۱۸ عیار (تومان)\n';
+  sensRows.forEach(r => csv += `${r.ounce},${r.dollar},${Math.round(r.price)}\n`);
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8'}));
+  a.download = 'gold_sensitivity_iran.csv'; a.click();
+}
+
+// ===== نمودارها =====
+function drawChart(id, labels, datasets, yLabel) {
+  const c = document.getElementById(id), ctx = c.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = c.parentElement.getBoundingClientRect();
+  c.width = rect.width * dpr; c.height = rect.height * dpr;
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.scale(dpr, dpr);
+  const W = rect.width, H = rect.height;
+  const pad = {top:24,right:16,bottom:36,left:64};
+  const cw = W-pad.left-pad.right, ch = H-pad.top-pad.bottom;
+
+  let vals = datasets.flatMap(d => d.data);
+  let minY = Math.min(...vals)*0.97, maxY = Math.max(...vals)*1.03;
+  if (minY === maxY) { minY -= 1; maxY += 1; }
+  const xp = i => pad.left + (i/(labels.length-1||1))*cw;
+  const yp = v => pad.top + ch - ((v-minY)/(maxY-minY))*ch;
+
+  ctx.clearRect(0,0,W,H);
+  ctx.font = '11px Vazirmatn,Tahoma';
+
+  ctx.fillStyle = '#94a3b8'; ctx.textAlign = 'left';
+  for (let i=0; i<=4; i++) {
+    const v = minY + (maxY-minY)*i/4, y = yp(v);
+    ctx.strokeStyle = 'rgba(71,85,105,.4)';
+    ctx.beginPath(); ctx.moveTo(pad.left,y); ctx.lineTo(pad.left+cw,y); ctx.stroke();
+    ctx.fillText(fmtT(v), 2, y+4);
+  }
+
+  ctx.textAlign = 'center'; ctx.fillStyle = '#94a3b8';
+  labels.forEach((l,i) => ctx.fillText(l, xp(i), H-8));
+
+  datasets.forEach(ds => {
+    ctx.strokeStyle = ds.color; ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ds.data.forEach((v,i) => { const x=xp(i),y=yp(v); i?ctx.lineTo(x,y):ctx.moveTo(x,y); });
+    ctx.stroke();
+    ds.data.forEach((v,i) => { ctx.fillStyle=ds.color; ctx.beginPath(); ctx.arc(xp(i),yp(v),4,0,7); ctx.fill(); });
+  });
+
+  ctx.textAlign = 'right'; ctx.font = '11px Vazirmatn,Tahoma';
+  datasets.forEach((ds,i) => {
+    ctx.fillStyle = ds.color; ctx.fillRect(W-10, pad.top+i*18, 10, 10);
+    ctx.fillStyle = '#f1f5f9'; ctx.fillText(ds.label, W-24, pad.top+i*18+9);
+  });
+
+  if (yLabel) { ctx.save(); ctx.translate(10,H/2); ctx.rotate(-Math.PI/2); ctx.textAlign='center'; ctx.fillStyle='#94a3b8'; ctx.fillText(yLabel,0,0); ctx.restore(); }
+}
+
+function renderCharts(data, fs) {
+  const find = (h,s) => fs.find(x => x.h===h && x.s===s);
+  const cur = data.gold18;
+
+  drawChart('chartForecast', ['امروز','۷ روز','۳۰ روز','۹۰ روز'], [
+    {label:'خوش‌بینانه', color:'#22c55e', data:[cur, find('۷ روز','خوش‌بینانه').price, find('۳۰ روز','خوش‌بینانه').price, find('۹۰ روز','خوش‌بینانه').price]},
+    {label:'واقع‌بینانه', color:'#3b82f6', data:[cur, find('۷ روز','واقع‌بینانه').price, find('۳۰ روز','واقع‌بینانه').price, find('۹۰ روز','واقع‌بینانه').price]},
+    {label:'بدبینانه', color:'#ef4444', data:[cur, find('۷ روز','بدبینانه').price, find('۳۰ روز','بدبینانه').price, find('۹۰ روز','بدبینانه').price]},
+  ], 'تومان');
+
+  const os = []; for(let o=3500;o<=4500;o+=250) os.push(o);
+  drawChart('chartOunce', os.map(o=>'$'+o), [{label:'با دلار '+fmtT(data.dollar), color:'#fbbf24', data:os.map(o=>marketPrice(o,data.dollar,data.adj))}], 'تومان');
+
+  const ds = []; for(let d=240000;d<=320000;d+=20000) ds.push(d);
+  drawChart('chartDollar', ds.map(d=>(d/1000).toLocaleString('fa-IR')+'ه'), [{label:'با انس $'+data.ounce.toLocaleString('en-US'), color:'#fbbf24', data:ds.map(d=>marketPrice(data.ounce,d,data.adj))}], 'تومان');
+}
+
+// ===== کنترل‌ها =====
+async function refreshAll() {
+  const btn = document.getElementById('refreshBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ در حال دریافت...';
+  document.getElementById('statusDot').className = 'dot stale';
+  document.getElementById('statusText').textContent = 'در حال تلاش از پراکسی‌ها...';
+
+  const data = await discoverPrices();
+  renderAll(data);
+
+  btn.disabled = false;
+  btn.textContent = '🔄 به‌روزرسانی قیمت‌ها';
+}
+
+document.getElementById('searchInput').addEventListener('input', e => {
+  const q = e.target.value.replace(/\D/g,'');
+  document.querySelectorAll('#sensBody tr').forEach(tr => tr.style.display = !q || tr.textContent.includes(q) ? '' : 'none');
+});
+
+document.getElementById('ounceFilter').addEventListener('change', e => {
+  const v = e.target.value;
+  if (!v) { document.querySelectorAll('#sensBody tr').forEach(tr => tr.style.display=''); return; }
+  const [mn,mx] = v.split('-').map(Number);
+  document.querySelectorAll('#sensBody tr').forEach(tr => {
+    const o = parseInt(tr.cells[0].textContent.replace(/,/g,''));
+    tr.style.display = (o>=mn && o<=mx) ? '' : 'none';
+  });
+});
+
+window.addEventListener('resize', () => {
+  clearTimeout(window._rt);
+  window._rt = setTimeout(() => { if (currentData) renderAll(currentData); }, 300);
+});
+
+// ===== شروع: فقط داده ثبت‌شده نمایش داده شود، هیچ فراخوانی خودکاری انجام نشود =====
+renderAll({
+  ounce: FALLBACK.ounce, dollar: FALLBACK.dollar, gold18: FALLBACK.gold18,
+  adj: FALLBACK.adj, live: false,
+  dates: FALLBACK.ounceDate + ' / ' + FALLBACK.dollarDate,
+  sources: ['ثبت‌شده']
+});
+</script>
+</body>
+  </html>
