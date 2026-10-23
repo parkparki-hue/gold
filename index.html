@@ -19,6 +19,9 @@ header h1{font-size:1.5rem;font-weight:700;color:var(--gold)}
 .dot.live{background:var(--green)}.dot.stale{background:var(--gold)}.dot.error{background:var(--red)}
 #refreshBtn{background:var(--gold);color:#0f172a;border:none;padding:9px 20px;border-radius:8px;font-family:inherit;font-weight:700;cursor:pointer;font-size:.9rem;display:inline-flex;align-items:center;gap:6px}
 #refreshBtn:disabled{opacity:.55;cursor:wait}
+#statusMsg{font-size:.85rem;padding:6px 12px;border-radius:8px;display:none;margin-top:8px}
+#statusMsg.success{display:block;background:rgba(34,197,94,.2);border:1px solid var(--green);color:var(--green)}
+#statusMsg.error{display:block;background:rgba(239,68,68,.2);border:1px solid var(--red);color:var(--red)}
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:24px}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
 .card .label{font-size:.8rem;color:var(--text2);margin-bottom:4px}
@@ -49,19 +52,20 @@ canvas{width:100%!important;height:100%!important}
 .footer{text-align:center;color:var(--text2);font-size:.75rem;padding:24px 0}
 .source-table td{font-size:.78rem}
 @media(max-width:768px){.cards{grid-template-columns:repeat(2,1fr)}.section{padding:12px}header h1{font-size:1.15rem}table{font-size:.72rem}th,td{padding:6px 3px}}
-@media print{body{background:#fff;color:#000}.section{border:1px solid #ccc;break-inside:avoid}.controls,.badge-row,#refreshBtn{display:none}}
+@media print{body{background:#fff;color:#000}.section{border:1px solid #ccc;break-inside:avoid}.controls,.badge-row,#refreshBtn,#statusMsg{display:none}}
 </style>
 </head>
 <body>
 <header>
   <div class="container">
     <h1>📊 داشبورد قیمت و پیش‌بینی طلای ۱۸ عیار ایران</h1>
-    <p class="subtitle">کشف قیمت چندمنبعی (فقط با کلیک دستی) + سه سناریو (۷ / ۳۰ / ۹۰ روز)</p>
+    <p class="subtitle">دریافت از PriceDB (به‌روزرسانی هر ۳۰ دقیقه) + سه سناریو (۷ / ۳۰ / ۹۰ روز)</p>
     <div class="badge-row">
       <button id="refreshBtn" onclick="refreshAll()">🔄 به‌روزرسانی قیمت‌ها</button>
       <span class="badge"><span class="dot stale" id="statusDot"></span><span id="statusText">آماده — داده ثبت‌شده</span></span>
       <span class="badge">آخرین تلاش: <span id="lastTry">—</span></span>
     </div>
+    <div id="statusMsg"></div>
   </div>
 </header>
 
@@ -117,19 +121,17 @@ canvas{width:100%!important;height:100%!important}
     <table class="source-table" style="font-size:.8rem">
       <thead><tr><th>منبع</th><th>نوع</th><th>وضعیت</th></tr></thead>
       <tbody>
-        <tr><td>TGJU.org</td><td>انس، دلار، طلای ۱۸ عیار</td><td>از طریق زنجیره پراکسی رایگان</td></tr>
-        <tr><td>corsproxy.io</td><td>پراکسی CORS</td><td>اولین انتخاب</td></tr>
-        <tr><td>allorigins.win</td><td>پراکسی CORS</td><td>دومین انتخاب</td></tr>
-        <tr><td>thingproxy</td><td>پراکسی CORS</td><td>سومین انتخاب</td></tr>
+        <tr><td>PriceDB (api.priceto.day)</td><td>دلار، طلا (از TGJU)</td><td>API رایگان، CORS فعال</td></tr>
+        <tr><td>TGJU.org</td><td>منبع اصلی PriceDB</td><td>غیرمستقیم</td></tr>
       </tbody>
     </table>
-    <div class="warning" style="margin-top:12px"><strong>محدودیت‌ها:</strong> پراکسی‌های رایگان ناپایدارند و ممکن است ساختار JSON سایت هدف تغییر کند. ضریب تعدیل ثابت فرض شده؛ داده‌ها ممکن است هم‌زمان نباشند؛ پیش‌بینی‌ها قطعی نیستند و توصیه معاملاتی محسوب نمی‌شوند. قیمت طلای ۱۸ عیار خام است و اجرت ساخت/مالیات/سود فروشنده را شامل نمی‌شود.</div>
+    <div class="warning" style="margin-top:12px"><strong>محدودیت‌ها:</strong> PriceDB داده‌ها را هر ۳۰ دقیقه به‌روزرسانی می‌کند (نه لحظه‌ای). ضریب تعدیل ثابت فرض شده؛ داده‌ها ممکن است هم‌زمان نباشند؛ پیش‌بینی‌ها قطعی نیستند و توصیه معاملاتی محسوب نمی‌شوند. قیمت طلای ۱۸ عیار خام است و اجرت ساخت/مالیات/سود فروشنده را شامل نمی‌شود.</div>
   </div>
-  <div class="footer">داده‌ها از منابع عمومی | این داشبورد توصیه خرید یا فروش ارائه نمی‌دهد</div>
+  <div class="footer">داده‌ها از PriceDB | این داشبورد توصیه خرید یا فروش ارائه نمی‌دهد</div>
 </main>
 
 <script>
-// ===== داده پایه (ثبت‌شده – جایگزین در صورت شکست همه پراکسی‌ها) =====
+// ===== داده پایه (ثبت‌شده – جایگزین در صورت شکست API) =====
 const FALLBACK = {
   ounce: 4019, ounceDate: '۲۳ اکتبر ۲۰۲۶', ounceSource: 'Qatar News Agency',
   dollar: 274000, dollarDate: '۲۱–۲۲ اکتبر ۲۰۲۶', dollarSource: 'Euronews فارسی',
@@ -161,73 +163,56 @@ function buildForecasts(adj, currentGold) {
   });
 }
 
-// ===== زنجیره پراکسی‌های رایگان (فقط با کلیک دستی فعال می‌شوند) =====
-const CORS_PROXIES = [
-  { name: 'corsproxy.io', build: u => `https://corsproxy.io/?${encodeURIComponent(u)}` },
-  { name: 'allorigins',   build: u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}` },
-  { name: 'thingproxy',   build: u => `https://thingproxy.freeboard.io/fetch/${u}` },
-  { name: 'cors.eu.org',  build: u => `https://cors.eu.org/${u}` },
-];
+// ===== دریافت از PriceDB =====
+const API_BASE = 'https://api.priceto.day/v1/latest';
 
-const TARGET_URL = 'https://api.tgju.org/v1/market/indicator/summary';
-
-async function fetchViaProxies(targetUrl, timeoutMs = 12000) {
-  for (const proxy of CORS_PROXIES) {
-    try {
-      const proxied = proxy.build(targetUrl);
-      console.log('تلاش:', proxy.name, proxied);
-      const res = await fetch(proxied, {
-        signal: AbortSignal.timeout(timeoutMs),
-        headers: { 'Accept': 'application/json' },
-      });
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      const text = await res.text();
-      let json;
-      try { json = JSON.parse(text); }
-      catch { throw new Error('پاسخ JSON نامعتبر'); }
-      console.log('✅ موفق از', proxy.name);
-      return { json, source: proxy.name };
-    } catch (e) {
-      console.warn(`❌ ${proxy.name} شکست: ${e.message}`);
-    }
-  }
-  return null;
-}
-
-function parseTgju(json) {
-  const out = { ounce: null, dollar: null, gold18: null };
-  if (!json) return out;
-  const arr = json.data || json.indicators || json;
-  const list = Array.isArray(arr) ? arr : Object.values(arr || {});
-  for (const item of list) {
-    if (!item || typeof item !== 'object') continue;
-    const key = (item.key || item.name || item.slug || '').toString().toLowerCase();
-    const price = parseFloat(String(item.price || item.value || item.close || '').replace(/,/g, ''));
-    if (!isFinite(price)) continue;
-    if (key.includes('ounce') || key.includes('ons')) out.ounce = price;
-    if (key === 'price_dollar_rl' || key.includes('dollar_free') || key.includes('دلار')) out.dollar = price;
-    if (key.includes('gold_18') || key.includes('geram18') || key.includes('18')) out.gold18 = price;
-  }
-  return out;
+async function fetchPrice(endpoint, timeoutMs = 12000) {
+  const res = await fetch(`${API_BASE}${endpoint}`, {
+    signal: AbortSignal.timeout(timeoutMs),
+    headers: { 'Accept': 'application/json' },
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const json = await res.json();
+  // ساختار PriceDB: { value: ... } یا { price: ... }
+  const val = json.value ?? json.price ?? json;
+  const num = parseFloat(String(val).replace(/,/g, ''));
+  if (!isFinite(num)) throw new Error('مقدار نامعتبر در پاسخ');
+  return num;
 }
 
 async function discoverPrices() {
-  const result = { ounce: null, dollar: null, gold18: null, live: false, sources: [] };
+  const result = { ounce: null, dollar: null, gold18: null, live: false, sources: [], error: null };
 
-  const fetched = await fetchViaProxies(TARGET_URL);
-  if (fetched) {
-    const p = parseTgju(fetched.json);
-    if (p.ounce) { result.ounce = p.ounce; result.sources.push('TGJU/انس'); }
-    if (p.dollar) { result.dollar = p.dollar; result.sources.push('TGJU/دلار'); }
-    if (p.gold18) { result.gold18 = p.gold18; result.sources.push('TGJU/طلا'); }
-    if (result.sources.length) result.sources.push('via ' + fetched.source);
+  try {
+    // دریافت همزمان از سه endpoint
+    const [dollar, gold18, ounce] = await Promise.allSettled([
+      fetchPrice('/irr/usd'),
+      fetchPrice('/irr/gold_18k'),
+      fetchPrice('/irr/xau_usd'),
+    ]);
+
+    if (dollar.status === 'fulfilled') { result.dollar = dollar.value; result.sources.push('PriceDB/دلار'); }
+    if (gold18.status === 'fulfilled') { result.gold18 = gold18.value; result.sources.push('PriceDB/طلا'); }
+    if (ounce.status === 'fulfilled') { result.ounce = ounce.value; result.sources.push('PriceDB/انس'); }
+
+    // اگر حداقل دلار و طلا دریافت شد، live=true
+    if (result.dollar && result.gold18) {
+      result.live = true;
+      if (!result.ounce) result.ounce = FALLBACK.ounce; // انس fallback
+    } else {
+      throw new Error('حداقل داده‌های دلار و طلا دریافت نشد');
+    }
+
+  } catch (e) {
+    result.error = e.message;
+    // fallback به داده ثبت‌شده
+    result.ounce = FALLBACK.ounce;
+    result.dollar = FALLBACK.dollar;
+    result.gold18 = FALLBACK.gold18;
+    result.live = false;
+    result.sources = ['ثبت‌شده'];
   }
 
-  if (!result.ounce) { result.ounce = FALLBACK.ounce; result.sources.push('ثبت‌شده'); }
-  if (!result.dollar) { result.dollar = FALLBACK.dollar; result.sources.push('ثبت‌شده'); }
-  if (!result.gold18) { result.gold18 = FALLBACK.gold18; result.sources.push('ثبت‌شده'); }
-
-  result.live = result.sources.some(s => s.startsWith('TGJU'));
   result.adj = result.gold18 / intrinsic(result.ounce, result.dollar);
   result.dates = result.live
     ? 'دریافت‌شده در ' + new Date().toLocaleString('fa-IR')
@@ -238,29 +223,37 @@ async function discoverPrices() {
 // ===== رندر =====
 let currentData = null;
 
+function showStatus(msg, type) {
+  const el = document.getElementById('statusMsg');
+  el.textContent = msg;
+  el.className = type;
+  if (type === 'success') setTimeout(() => { el.style.display = 'none'; }, 5000);
+}
+
 function renderAll(data) {
   currentData = data;
   const adj = data.adj;
 
   document.getElementById('statusDot').className = 'dot ' + (data.live ? 'live' : 'stale');
-  document.getElementById('statusText').textContent = data.live ? 'داده زنده/ترکیبی' : 'داده ثبت‌شده (غیرزنده)';
+  document.getElementById('statusText').textContent = data.live ? 'داده زنده' : 'داده ثبت‌شده (غیرزنده)';
   document.getElementById('lastTry').textContent = new Date().toLocaleString('fa-IR');
   document.getElementById('adjFactor').textContent = adj.toFixed(4);
 
   const warn = document.getElementById('dataWarning');
   if (!data.live) {
     warn.style.display = 'block';
-    warn.innerHTML = `⚠️ دریافت زنده ممکن نشد. داده‌های نمایش‌داده‌شده از منابع معتبر ثبت‌شده (${data.dates}) هستند و <strong>زنده نیستند</strong>. ممکن است پراکسی‌های رایگان در دسترس نباشند یا سایت TGJU ساختار پاسخ را تغییر داده باشد. برای جزئیات، Console مرورگر (F12) را ببینید.`;
+    let errDetail = data.error ? ` دلیل: ${data.error}` : '';
+    warn.innerHTML = `⚠️ دریافت زنده ممکن نشد.${errDetail} داده‌های نمایش‌داده‌شده از منابع معتبر ثبت‌شده (${data.dates}) هستند و <strong>زنده نیستند</strong>.`;
   } else {
     warn.style.display = 'none';
   }
 
   document.getElementById('cOunce').textContent = '$' + data.ounce.toLocaleString('en-US', {maximumFractionDigits:2});
-  document.getElementById('mOunce').textContent = data.live ? (data.sources.join(' | ')) : FALLBACK.ounceSource;
+  document.getElementById('mOunce').textContent = data.live ? data.sources.filter(s=>s.includes('انس')).join(' | ') || 'PriceDB' : FALLBACK.ounceSource;
   document.getElementById('cDollar').textContent = fmtT(data.dollar) + ' تومان';
-  document.getElementById('mDollar').textContent = data.live ? 'ترکیبی' : FALLBACK.dollarSource;
+  document.getElementById('mDollar').textContent = data.live ? 'PriceDB' : FALLBACK.dollarSource;
   document.getElementById('cGold').textContent = fmtT(data.gold18) + ' تومان';
-  document.getElementById('mGold').textContent = data.live ? 'ترکیبی' : FALLBACK.goldSource;
+  document.getElementById('mGold').textContent = data.live ? 'PriceDB' : FALLBACK.goldSource;
 
   const fs = buildForecasts(adj, data.gold18);
   const byH = h => fs.filter(x => x.h === h);
@@ -282,7 +275,7 @@ function renderAll(data) {
     tb.appendChild(tr);
   });
 
-  document.getElementById('assumptionsBox').innerHTML = `<strong>فرضیات:</strong> ضریب تعدیل ${adj.toFixed(4)} (ثابت) | انس ${data.ounce.toLocaleString('en-US')} دلار | دلار ${fmtT(data.dollar)} تومان | طلا ${fmtT(data.gold18)} تومان. سناریوها بر اساس روند، حمایت/مقاومت و رویدادهای پیش‌رو (نشست فدرال رزرو) تنظیم شده‌اند.`;
+  document.getElementById('assumptionsBox').innerHTML = `<strong>فرضیات:</strong> ضریب تعدیل ${adj.toFixed(4)} (ثابت) | انس ${data.ounce.toLocaleString('en-US')} دلار | دلار ${fmtT(data.dollar)} تومان | طلا ${fmtT(data.gold18)} تومان.`;
 
   renderSensitivity(data);
   renderCharts(data, fs);
@@ -396,13 +389,20 @@ async function refreshAll() {
   btn.disabled = true;
   btn.textContent = '⏳ در حال دریافت...';
   document.getElementById('statusDot').className = 'dot stale';
-  document.getElementById('statusText').textContent = 'در حال تلاش از پراکسی‌ها...';
+  document.getElementById('statusText').textContent = 'در حال دریافت از PriceDB...';
+  document.getElementById('statusMsg').style.display = 'none';
 
   const data = await discoverPrices();
   renderAll(data);
 
   btn.disabled = false;
   btn.textContent = '🔄 به‌روزرسانی قیمت‌ها';
+
+  if (data.live) {
+    showStatus('✅ قیمت‌ها با موفقیت از PriceDB دریافت شد.', 'success');
+  } else {
+    showStatus('❌ خطا: ' + (data.error || 'دریافت داده ممکن نشد'), 'error');
+  }
 }
 
 document.getElementById('searchInput').addEventListener('input', e => {
@@ -425,7 +425,7 @@ window.addEventListener('resize', () => {
   window._rt = setTimeout(() => { if (currentData) renderAll(currentData); }, 300);
 });
 
-// ===== شروع: فقط داده ثبت‌شده نمایش داده شود، هیچ فراخوانی خودکاری انجام نشود =====
+// ===== شروع: فقط داده ثبت‌شده نمایش داده شود =====
 renderAll({
   ounce: FALLBACK.ounce, dollar: FALLBACK.dollar, gold18: FALLBACK.gold18,
   adj: FALLBACK.adj, live: false,
